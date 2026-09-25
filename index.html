@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐱 CAT DASH — Career Maze Challenge</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#0b1020;color:#fff}
+.wrap{max-width:1000px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap}
+h1{margin:0;font-size:28px}.sub{color:#b9c3d6}.stats{display:flex;gap:8px;flex-wrap:wrap}.pill{background:#182136;border:1px solid #303b54;border-radius:999px;padding:8px 12px;font-weight:bold}
+.question{background:#151d31;border:1px solid #34415d;border-radius:14px;padding:14px;margin:12px 0}.qtext{font-weight:bold;font-size:19px}.cat{color:#aebbd2;margin-top:5px}
+.board-wrap{overflow-x:auto}.board{position:relative;min-width:650px;height:420px;background:#080c16;border:4px solid #263553;border-radius:15px;overflow:hidden}
+.wall{position:absolute;background:#273c72;border:2px solid #4665aa;border-radius:4px}
+.option{position:absolute;width:125px;height:58px;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:bold;padding:6px;border:3px solid white;z-index:3}
+.o1{background:#e85d75}.o2{background:#e8a93b}.o3{background:#4e9eea}
+.player,.monster{position:absolute;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:25px;z-index:5}
+.monster{font-size:24px}
+.controls,.scores{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.card{background:#151d31;border:1px solid #303b54;border-radius:10px;padding:9px}.card b{display:block}.small{font-size:12px;color:#b8c4d9}
+button{border:0;border-radius:10px;padding:11px 15px;font-weight:bold;cursor:pointer;margin:8px 6px 0 0}.start{background:#ffd34e}.sound{background:#e9eef8}.reset{background:#ef6a7a;color:white}
+.notice{margin-top:10px;color:#c8d2e5;min-height:20px}
+.bar{height:6px;background:#2a354c;border-radius:9px;margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;background:#ffd34e}
+.share{margin-top:14px;padding:12px;border:1px dashed #465473;border-radius:12px;color:#bac6d9}
+@media(max-width:700px){.controls,.scores{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+<div><h1>🐱 CAT DASH — Career Maze Challenge</h1><div class="sub">5-player classroom maze chase • 20 seconds per question</div></div>
+<div class="stats"><span class="pill">⏱ <span id="time">20</span>s</span><span class="pill">🏆 First = +2</span><span class="pill">⭐ Next = +1</span></div>
+</div>
+
+<div class="question"><div id="question" class="qtext">Press START GAME to begin.</div><div id="category" class="cat">Common • Uncommon • Technical • Creative Jobs</div></div>
+
+<div class="board-wrap">
+<div class="board" id="board">
+<div class="wall" style="left:20px;top:25px;width:190px;height:16px"></div>
+<div class="wall" style="left:20px;top:25px;width:16px;height:125px"></div>
+<div class="wall" style="left:120px;top:90px;width:170px;height:16px"></div>
+<div class="wall" style="left:270px;top:25px;width:16px;height:80px"></div>
+<div class="wall" style="left:350px;top:25px;width:210px;height:16px"></div>
+<div class="wall" style="left:540px;top:25px;width:16px;height:130px"></div>
+<div class="wall" style="left:360px;top:105px;width:180px;height:16px"></div>
+<div class="wall" style="left:20px;top:210px;width:155px;height:16px"></div>
+<div class="wall" style="left:155px;top:210px;width:16px;height:105px"></div>
+<div class="wall" style="left:225px;top:155px;width:16px;height:165px"></div>
+<div class="wall" style="left:290px;top:210px;width:170px;height:16px"></div>
+<div class="wall" style="left:440px;top:155px;width:16px;height:165px"></div>
+<div class="wall" style="left:500px;top:265px;width:75px;height:16px"></div>
+<div class="wall" style="left:25px;top:350px;width:180px;height:16px"></div>
+<div class="wall" style="left:310px;top:350px;width:240px;height:16px"></div>
+<div class="option o1" id="opt0"></div><div class="option o2" id="opt1"></div><div class="option o3" id="opt2"></div>
+<div id="players"></div><div id="monsters"></div>
+</div></div>
+
+<div class="controls" id="controls"></div>
+<div class="scores" id="scores"></div>
+<button class="start" id="start">▶ START GAME</button>
+<button class="sound" id="sound">🔊 Sound ON</button>
+<button class="reset" id="reset">↻ Reset Scores</button>
+<div id="notice" class="notice">P1 WASD • P2 ARROWS • P3 IJKL • P4 TFGH • P5 8456</div>
+
+<div class="share"><b>🔗 SHARE / QR:</b> Publish this folder using GitHub Pages. The resulting GitHub Pages URL can be copied into any QR-code generator for students to scan.</div>
+</div>
+
+<script>
+(()=> {
+const qs=[
+["A teacher helps students learn in a classroom.","Common Job","common"],
+["A doctor treats patients and helps people stay healthy.","Common Job","common"],
+["A pilot flies passengers from one place to another.","Common Job","common"],
+["A professional who designs video-game worlds and characters works in what category?","Creative Job","creative"],
+["A film director creates and controls the artistic vision of a movie.","Creative Job","creative"],
+["A fashion designer creates clothing and new styles.","Creative Job","creative"],
+["A storm chaser follows severe weather to collect scientific information.","Uncommon Job","uncommon"],
+["A professional who tests theme-park rides may have what kind of job?","Uncommon Job","uncommon"],
+["A person who trains dolphins for specialized performances has what kind of job?","Uncommon Job","uncommon"],
+["A software developer writes computer programs.","Technical Job","technical"],
+["A network engineer manages computer networks.","Technical Job","technical"],
+["A cybersecurity analyst protects computer systems.","Technical Job","technical"],
+["An electrician installs and repairs electrical systems.","Technical Job","technical"],
+["A photographer creates images to communicate ideas.","Creative Job","creative"],
+["A chef creates original dishes and menus.","Creative Job","creative"]
+];
+const labels={common:"COMMON JOB",uncommon:"UNCOMMON JOB",technical:"TECHNICAL JOB",creative:"CREATIVE JOB"};
+const players=[
+{name:"P1",emoji:"🐱",x:285,y:50,keys:["w","s","a","d"]},
+{name:"P2",emoji:"😺",x:315,y:50,keys:["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"]},
+{name:"P3",emoji:"😸",x:345,y:50,keys:["i","k","j","l"]},
+{name:"P4",emoji:"😹",x:375,y:50,keys:["t","g","f","h"]},
+{name:"P5",emoji:"😻",x:405,y:50,keys:["8","5","4","6"]}
+];
+const monsters=[
+{x:90,y:170,vx:1.1,vy:.7,e:"👾"},{x:470,y:70,vx:-.9,vy:.8,e:"👻"},
+{x:285,y:290,vx:1,vy:-.8,e:"👹"},{x:500,y:190,vx:-.7,vy:-1,e:"🤖"},
+{x:190,y:270,vx:.8,vy:.9,e:"👿"}];
+let scores=[0,0,0,0,0],current,answered=[],time=20,running=false,soundOn=true,timer,raf;
+const $=id=>document.getElementById(id);
+
+function build(){
+players.forEach((p,i)=>{
+let d=document.createElement("div");d.className="card";d.innerHTML="<b>"+p.emoji+" "+p.name+"</b><span class='small'>"+(i===0?"W A S D":i===1?"ARROWS":i===2?"I J K L":i===3?"T F G H":"8 4 5 6")+"</span>";$("controls").appendChild(d);
+let el=document.createElement("div");el.className="player";el.id="p"+i;el.textContent=p.emoji;$("players").appendChild(el);
+let s=document.createElement("div");s.className="card";s.innerHTML=p.emoji+" "+p.name+"<br><b><span id='sc"+i+"'>0</span> pts</b><div class='bar'><i id='bar"+i+"'></i></div>";$("scores").appendChild(s);
+});
+monsters.forEach((m,i)=>{let d=document.createElement("div");d.className="monster";d.id="m"+i;d.textContent=m.e;$("monsters").appendChild(d)});
+}
+function newQuestion(){
+current=qs[Math.floor(Math.random()*qs.length)];
+$("question").textContent=current[0];
+$("category").textContent="Find: "+current[1]+" • First correct = 2 points";
+let arr=["common","uncommon","technical","creative"].sort(()=>Math.random()-.5).slice(0,3);
+["opt0","opt1","opt2"].forEach((id,i)=>{$(id).dataset.cat=arr[i];$(id).textContent=labels[arr[i]]});
+answered=[];time=20;$("time").textContent=20;$("time").classList.remove("hot");
+players.forEach((p,i)=>{p.x=285+i*25;p.y=50});
+render();
+}
+function blocked(x,y){
+if(x<2||y<2||x>610||y>385)return true;
+const w=[[20,25,210,41],[20,25,36,150],[120,90,290,106],[270,25,286,105],[350,25,560,41],[540,25,556,155],[360,105,540,121],[20,210,175,226],[155,210,171,315],[225,155,241,320],[290,210,460,226],[440,155,456,320],[500,265,575,281],[25,350,205,366],[310,350,550,366]];
+return w.some(a=>x+25>a[0]&&x<a[2]&&y+25>a[1]&&y<a[3]);
+}
+function move(i,dx,dy){
+if(!running)return;let p=players[i],s=3.8,nx=p.x+dx*s,ny=p.y+dy*s;
+if(!blocked(nx,ny)){p.x=nx;p.y=ny;check(i)}
+}
+function check(i){
+let p=players[i];
+for(let j=0;j<3;j++){
+let o=$("opt"+j),ox=parseInt(o.style.left||[24,260,470][j]),oy=parseInt(o.style.top||350);
+if(p.x<ox+125&&p.x+28>ox&&p.y<oy+58&&p.y+28>oy){
+if(o.dataset.cat===current[2]&&!answered.includes(i)){
+let pts=answered.length===0?2:1;scores[i]+=pts;answered.push(i);update();
+$("notice").textContent="🎉 "+players[i].name+" found the correct answer! +"+pts+" point"+(pts>1?"s":"");
+beep(800,.08);setTimeout(()=>beep(1100,.1),80);
+if(answered.length===5)end("🏁 Everyone found the correct answer!");
+}else if(o.dataset.cat!==current[2]){
+$("notice").textContent="❌ "+players[i].name+" chose the wrong answer — 0 points.";
+beep(150,.12);
+}return;
+}}
+}
+function update(){players.forEach((p,i)=>{$("sc"+i).textContent=scores[i];$("bar"+i).style.width=Math.min(100,scores[i]*5)+"%"})}
+function render(){
+players.forEach((p,i)=>{$("p"+i).style.left=p.x+"px";$("p"+i).style.top=p.y+"px"});
+monsters.forEach((m,i)=>{$("m"+i).style.left=m.x+"px";$("m"+i).style.top=m.y+"px"});
+["opt0","opt1","opt2"].forEach((id,i)=>{let x=[24,260,470][i];$(id).style.left=x+"px";$(id).style.top="350px"});
+}
+function beep(f,d){
+if(!soundOn)return;try{let C=window.AudioContext||window.webkitAudioContext;if(!C)return;let c=new C(),o=c.createOscillator(),g=c.createGain();o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.value=.04;o.start();g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.stop(c.currentTime+d)}catch(e){}
+}
+function end(msg){running=false;clearInterval(timer);$("notice").textContent=msg+" Press START GAME for the next round.";beep(180,.2)}
+function start(){
+if(running)return;newQuestion();running=true;$("notice").textContent="🚀 GO! Reach the correct answer before 20 seconds!";
+timer=setInterval(()=>{time--;$("time").textContent=time;if(time<=5)$("time").classList.add("hot");if(time<=0)end("⏰ Time is up!");},1000);beep(550,.1);animate();
+}
+const held={};
+document.addEventListener("keydown",e=>{held[e.key]=true;if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key))e.preventDefault()});
+document.addEventListener("keyup",e=>held[e.key]=false);
+function animate(){
+cancelAnimationFrame(raf);
+function loop(){
+if(!running)return;
+players.forEach((p,i)=>{let k=p.keys;if(held[k[0]])move(i,0,-1);if(held[k[1]])move(i,0,1);if(held[k[2]])move(i,-1,0);if(held[k[3]])move(i,1,0)});
+monsters.forEach(m=>{
+m.x+=m.vx;m.y+=m.vy;
+if(blocked(m.x,m.y)){m.vx*=-1;m.vy*=-1;m.x+=m.vx*2;m.y+=m.vy*2}
+});
+players.forEach((p,i)=>monsters.forEach(m=>{if(Math.hypot(p.x-m.x,p.y-m.y)<28){p.x=285+i*25;p.y=50;$("notice").textContent="💥 "+players[i].name+" was caught by a monster! Keep running!";beep(220,.06)}}));
+render();raf=requestAnimationFrame(loop);
+}loop();
+}
+$("start").onclick=start;
+$("sound").onclick=()=>{soundOn=!soundOn;$("sound").textContent=soundOn?"🔊 Sound ON":"🔇 Sound OFF";if(soundOn)beep(600,.08)};
+$("reset").onclick=()=>{scores=[0,0,0,0,0];update();newQuestion();$("notice").textContent="Scores reset. Press START GAME!"};
+build();newQuestion();update();
+})();
+</script>
+</body>
+</html>
